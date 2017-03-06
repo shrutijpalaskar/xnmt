@@ -8,6 +8,7 @@ from input import *
 from encoder import *
 from decoder import *
 from translator import *
+from evaluator import *
 '''
 This will be the main class to perform training.
 '''
@@ -83,13 +84,21 @@ if __name__ == "__main__":
       if sent_num % 100 == 99 or sent_num == len(train_corpus_source) - 1:
         dev_loss = 0.0
         dev_words = 0
+        orig_tgt = []
+        creat_tgt = []
         for src, tgt in zip(dev_corpus_source, dev_corpus_target):
           dy.renew_cg()
           loss = translator.calc_loss(src, tgt).value()
           dev_loss += loss
           dev_words += count_tgt_words(tgt)
+          form_tgt = translator.translate(src)
+          orig_tgt.extend(tgt)
+          creat_tgt.extend(form_tgt)
+
         print ((epoch_num - 1) + 1.0 * (sent_num + 1) / len(train_corpus_source),
                'Dev perplexity:', math.exp(dev_loss / dev_words),
                '(%f over %d words)' % (dev_loss, dev_words))
+        obj = BLEUEvaluator(ngram=4)
+        print ('BLEU: ', obj.evaluate(orig_tgt, creat_tgt))
     trainer.update_epoch()
     print (epoch_num, 'Train perplexity:', math.exp(epoch_loss/word_count), '(%f over %d words)' % (epoch_loss, word_count))
