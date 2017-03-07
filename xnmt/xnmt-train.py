@@ -1,5 +1,6 @@
 # coding: utf-8
 import argparse
+import time
 import math
 import dynet as dy
 from embedder import *
@@ -73,6 +74,8 @@ if __name__ == "__main__":
     epoch_loss = 0.0
     word_count = 0
     epoch_num += 1
+    t0 = time.time()
+
     for sent_num, (src, tgt) in enumerate(zip(train_corpus_source, train_corpus_target)):
       dy.renew_cg()
       loss = translator.calc_loss(src, tgt)
@@ -82,6 +85,7 @@ if __name__ == "__main__":
       trainer.update()
 
       if sent_num % 100 == 99 or sent_num == len(train_corpus_source) - 1:
+        t0_temp = time.time()
         dev_loss = 0.0
         dev_words = 0
         orig_tgt = []
@@ -95,10 +99,17 @@ if __name__ == "__main__":
           orig_tgt.extend(tgt)
           creat_tgt.extend(form_tgt)
 
+        obj = BLEUEvaluator(ngram=4)
         print ((epoch_num - 1) + 1.0 * (sent_num + 1) / len(train_corpus_source),
                'Dev perplexity:', math.exp(dev_loss / dev_words),
-               '(%f over %d words)' % (dev_loss, dev_words))
-        obj = BLEUEvaluator(ngram=4)
-        print ('BLEU: ', obj.evaluate(orig_tgt, creat_tgt))
+               '(%f over %d words)' % (dev_loss, dev_words), 'BLEU: ', obj.evaluate(orig_tgt, creat_tgt))
+        delta_time = time.time() - t0_temp
+
+        t0 = t0 + delta_time
+
     trainer.update_epoch()
-    print (epoch_num, 'Train perplexity:', math.exp(epoch_loss/word_count), '(%f over %d words)' % (epoch_loss, word_count))
+
+
+    t1 = time.time()
+    print (epoch_num, 'Train perplexity:', math.exp(epoch_loss/word_count), '(%f over %d words %f words per sec)\n' %
+           (epoch_loss, word_count, word_count/(t1-t0)))
