@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import matplotlib.pyplot as plt
 import numpy as np
 import dynet as dy
@@ -23,6 +24,7 @@ class DefaultTranslatorReport(object):
     :param file_name: the name of the file to which we write the attention
     """
     fig, ax = plt.subplots()
+    plt.subplots_adjust(top=0.75)
 
     # put the major ticks at the middle of each cell
     ax.set_xticks(np.arange(attention_matrix.shape[1]) + 0.5, minor=False)
@@ -30,9 +32,9 @@ class DefaultTranslatorReport(object):
     ax.invert_yaxis()
 
     # label axes by words
-    ax.set_xticklabels(trg_words, minor=False)
-    ax.set_yticklabels(src_words, minor=False)
     ax.xaxis.tick_top()
+    ax.set_xticklabels(trg_words, rotation='vertical')
+    ax.set_yticklabels(src_words)
 
     # draw the heatmap
     plt.pcolor(attention_matrix, cmap=plt.cm.Blues, vmin=0, vmax=1)
